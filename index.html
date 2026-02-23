@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DuBLoNet: Dual-Buffer Low-Latency Network for Streaming Speech Enhancement</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="container">
+
+<!-- ===== Header ===== -->
+<header>
+    <h1>DuBLoNet: Dual-Buffer Low-Latency Network<br>for Streaming Speech Enhancement</h1>
+    <div class="venue">Submitted to Interspeech 2026</div>
+    <div class="abstract">
+        <strong>Abstract.</strong>
+        Streaming speech enhancement requires balancing algorithmic latency against quality, yet existing approaches largely treat this as a binary causal versus non-causal choice.
+        DuBLoNet addresses this with a single architecture through three mechanisms:
+        (1) asymmetric temporal padding redistributes past and future context in convolutions, enabling systematic latency control without increasing model size;
+        (2) dual-buffer streaming combines state buffers for past context with lookahead buffers for future context at input and feature levels; and
+        (3) a context isolation mechanism prevents future-frame leakage into streaming state, ensuring training and inference consistency.
+        On VoiceBank+DEMAND, DuBLoNet (1.37M parameters) covers 12.5 to 75.0 ms algorithmic latency,
+        achieving PESQ from 3.35 at 12.5 ms to 3.43 at 75.0 ms.
+        At just 12.5 ms (fully causal), DuBLoNet achieves PESQ 3.35, surpassing the prior causal state-of-the-art (3.27 at 46.5 ms).
+    </div>
+</header>
+
+<!-- ===== Architecture ===== -->
+<section id="architecture">
+    <h2>Architecture</h2>
+    <p>
+        DuBLoNet is a frequency-domain causal speech enhancement model based on the Backbone encoder-decoder architecture.
+        Asymmetric convolution padding ratios control the lookahead at each layer, enabling fine-grained latency configuration
+        from a single trained model. At inference time, dual-buffer streaming processes audio frame-by-frame using state buffers
+        (past context) and lookahead buffers (future context).
+    </p>
+    <div class="figure-wrap">
+        <img class="zoomable" src="figures/figure1.png" alt="DuBLoNet architecture diagram" data-caption="Figure 1: DuBLoNet architecture with dual-buffer streaming inference.">
+        <div class="caption">Figure 1: DuBLoNet architecture with dual-buffer streaming inference.</div>
+    </div>
+</section>
+
+<!-- ===== Audio Comparison ===== -->
+<section id="audio-samples">
+    <h2>Audio Samples</h2>
+    <p>
+        Audio samples from the VoiceBank+DEMAND test set. PESQ values shown are <strong>test-set averages</strong> from the paper (not per-sample scores).
+        DuBLoNet models use a single 1.37M-parameter architecture at different latency configurations.
+    </p>
+
+    <!-- Tab bar -->
+    <div class="tab-bar" role="tablist">
+        <button class="active" role="tab" data-sample="p232_005">p232_005</button>
+        <button role="tab" data-sample="p232_023">p232_023</button>
+        <button role="tab" data-sample="p257_003">p257_003</button>
+        <button role="tab" data-sample="p257_054">p257_054</button>
+    </div>
+
+    <!-- Tab contents (one per sample) -->
+    <div id="tab-p232_005" class="tab-content active"></div>
+    <div id="tab-p232_023" class="tab-content"></div>
+    <div id="tab-p257_003" class="tab-content"></div>
+    <div id="tab-p257_054" class="tab-content"></div>
+</section>
+
+<!-- ===== Results ===== -->
+<section id="results">
+    <h2>Results</h2>
+    <div class="figure-wrap">
+        <img class="zoomable" src="figures/latency_vs_pesq.png" alt="Latency vs PESQ plot" style="max-width:600px;" data-caption="Figure 2: PESQ vs. algorithmic latency for DuBLoNet and comparison models on VoiceBank+DEMAND.">
+        <div class="caption">Figure 2: PESQ vs. algorithmic latency for DuBLoNet and comparison models on VoiceBank+DEMAND.</div>
+    </div>
+
+    <h3>Table: Comparison on VoiceBank+DEMAND</h3>
+    <p>Best causal result per metric in <strong>bold</strong>. &mdash; : not reported or unverifiable.</p>
+
+    <table class="results-table">
+        <thead>
+            <tr>
+                <th>Model</th>
+                <th>Year</th>
+                <th>&tau; (ms)</th>
+                <th>Params</th>
+                <th>PESQ</th>
+                <th>STOI</th>
+                <th>CSIG</th>
+                <th>CBAK</th>
+                <th>COVL</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Noisy</td>
+                <td>&mdash;</td><td>&mdash;</td><td>&mdash;</td>
+                <td>1.97</td><td>.921</td><td>3.35</td><td>2.44</td><td>2.63</td>
+            </tr>
+            <tr class="group-separator">
+                <td>RNNoise</td>
+                <td>2018</td><td>10</td><td>0.06M</td>
+                <td>2.33</td><td>.922</td><td>3.40</td><td>2.51</td><td>2.84</td>
+            </tr>
+            <tr>
+                <td>GaGNet</td>
+                <td>2022</td><td>~10</td><td>5.94M</td>
+                <td>2.94</td><td>&mdash;</td><td>4.26</td><td>3.45</td><td>3.59</td>
+            </tr>
+            <tr>
+                <td>xLSTM-SENet</td>
+                <td>2025</td><td>~19&dagger;</td><td>2.2M</td>
+                <td>3.26</td><td>.950</td><td>4.57</td><td class="best">3.79</td><td>4.00</td>
+            </tr>
+            <tr>
+                <td>DFNet3</td>
+                <td>2023</td><td>40</td><td>2.13M</td>
+                <td>3.17</td><td>.944</td><td>4.34</td><td>3.61</td><td>3.77</td>
+            </tr>
+            <tr>
+                <td>aTENNuate</td>
+                <td>2025</td><td>46.5</td><td>0.84M</td>
+                <td>3.27</td><td>&mdash;</td><td>4.57</td><td>2.85</td><td>3.96</td>
+            </tr>
+            <tr class="group-separator ours">
+                <td>DuBLoNet (12.5 ms)</td>
+                <td rowspan="5">&mdash;</td><td>12.5</td><td rowspan="5">1.37M</td>
+                <td>3.35&plusmn;.02</td><td>.952&plusmn;.000</td><td>4.61&plusmn;.01</td><td>3.71&plusmn;.01</td><td>4.05&plusmn;.02</td>
+            </tr>
+            <tr class="ours">
+                <td>DuBLoNet (25.0 ms)</td>
+                <td>25.0</td>
+                <td>3.36&plusmn;.01</td><td>.953&plusmn;.000</td><td>4.62&plusmn;.01</td><td>3.72&plusmn;.02</td><td>4.07&plusmn;.01</td>
+            </tr>
+            <tr class="ours">
+                <td>DuBLoNet (50.0 ms)</td>
+                <td>50.0</td>
+                <td>3.40&plusmn;.02</td><td>.953&plusmn;.001</td><td>4.63&plusmn;.02</td><td>3.72&plusmn;.01</td><td>4.09&plusmn;.02</td>
+            </tr>
+            <tr class="ours">
+                <td>DuBLoNet (75.0 ms)</td>
+                <td>75.0</td>
+                <td class="best">3.43&plusmn;.01</td><td class="best">.954&plusmn;.001</td><td class="best">4.66&plusmn;.02</td><td>3.78&plusmn;.00</td><td class="best">4.12&plusmn;.02</td>
+            </tr>
+            <tr class="ours">
+                <td>DuBLoNet&Dagger; (200 ms)</td>
+                <td>200.0</td>
+                <td>3.47&plusmn;.02</td><td>.957&plusmn;.001</td><td>4.69&plusmn;.01</td><td>3.79&plusmn;.03</td><td>4.17&plusmn;.02</td>
+            </tr>
+            <tr class="group-separator">
+                <td>MP-SENet</td>
+                <td>2023</td><td>&mdash;</td><td>2.05M</td>
+                <td>3.50</td><td>.960</td><td>4.73</td><td>3.95</td><td>4.22</td>
+            </tr>
+        </tbody>
+    </table>
+    <p style="font-size:12px;color:var(--fg-muted);">
+        &dagger; STFT-only latency; symmetric Conv2d padding adds implicit lookahead (~125 ms effective).<br>
+        &Dagger; Symmetric padding (r<sub>R</sub>=0.5); architecture upper bound, excluded from best-causal ranking.
+    </p>
+</section>
+
+<!-- ===== Footer ===== -->
+<footer>
+    <h3>Citation</h3>
+    <div class="bibtex">@inproceedings{dublonet2026,
+  title     = {DuBLoNet: Dual-Buffer Low-Latency Network for Streaming Speech Enhancement},
+  author    = {Anonymous},
+  booktitle = {Proc. Interspeech 2026},
+  year      = {2026}
+}</div>
+    <p style="margin-top:16px;">
+        <a href="https://github.com/">Code &amp; Model (coming soon)</a>
+    </p>
+</footer>
+
+</div><!-- .container -->
+
+<!-- Lightbox modal -->
+<div id="lightbox" class="lightbox" hidden>
+    <div class="lightbox-backdrop"></div>
+    <div class="lightbox-content">
+        <img id="lightbox-img" src="" alt="">
+        <div id="lightbox-caption" class="lightbox-caption"></div>
+    </div>
+</div>
+
+<script>
+// === Model definitions for audio table generation ===
+const MODELS = [
+    // group: "reference" | "ours" | "baseline"
+    { name: "Clean",       dir: "clean",             latency: "&mdash;", pesq: "&mdash;", group: "reference" },
+    { name: "Noisy",       dir: "noisy",             latency: "&mdash;", pesq: "1.97",    group: "reference" },
+    { name: "DuBLoNet 12.5 ms", dir: "dublonet_12.5ms",  latency: "12.5",  pesq: "3.35", group: "ours" },
+    { name: "DuBLoNet 25.0 ms", dir: "dublonet_25.0ms",  latency: "25.0",  pesq: "3.36", group: "ours" },
+    { name: "DuBLoNet 50.0 ms", dir: "dublonet_50.0ms",  latency: "50.0",  pesq: "3.40", group: "ours" },
+    { name: "DuBLoNet 75.0 ms", dir: "dublonet_75.0ms",  latency: "75.0",  pesq: "3.43", group: "ours" },
+    { name: "DuBLoNet 200 ms",  dir: "dublonet_200.0ms", latency: "200.0", pesq: "3.47", group: "ours" },
+    { name: "DeepFilterNet3",   dir: "deepfilternet3",   latency: "40",    pesq: "3.17", group: "baseline" },
+    { name: "MP-SENet",         dir: "mpsenet",          latency: "&mdash;", pesq: "3.50", group: "baseline" },
+];
+
+const SAMPLES = ["p232_005", "p232_023", "p257_003", "p257_054"];
+
+// Build audio table + spectrogram grid
+function buildTabContent(sample) {
+    // Audio table
+    let prevGroup = null;
+    let rows = `<tr><th>Model</th><th>Latency (ms)</th><th>PESQ</th><th>Audio</th></tr>`;
+    for (const m of MODELS) {
+        const sep = (prevGroup && prevGroup !== m.group) ? ' class="group-separator"' : '';
+        const nameClass = m.group === "ours" ? "model-name ours" : "model-name";
+        rows += `<tr${sep}>
+            <td class="${nameClass}">${m.name}</td>
+            <td class="latency">${m.latency}</td>
+            <td class="pesq">${m.pesq}</td>
+            <td><audio controls preload="none" src="audio/${m.dir}/${sample}.wav"></audio></td>
+        </tr>`;
+        prevGroup = m.group;
+    }
+    const table = `<table class="audio-table">${rows}</table>`;
+
+    // Spectrogram grid — grouped by category, 2-col layout
+    // Exclude DuBLoNet 50.0ms from spectrograms for cleaner 2-per-row layout
+    const specSkip = new Set(["dublonet_50.0ms"]);
+    const groups = [
+        { label: "Reference",      models: MODELS.filter(m => m.group === "reference") },
+        { label: "DuBLoNet (Ours)", models: MODELS.filter(m => m.group === "ours" && !specSkip.has(m.dir)) },
+        { label: "Baselines",      models: MODELS.filter(m => m.group === "baseline") },
+    ];
+
+    let grid = '<h3>Spectrograms</h3>';
+    for (const g of groups) {
+        let items = '';
+        for (const m of g.models) {
+            const cls = m.group === "ours" ? "spec-label ours" : "spec-label";
+            items += `<div class="spec-item">
+                <div class="${cls}">${m.name}</div>
+                <img class="zoomable" src="spectrograms/${sample}/${m.dir}.png" alt="${m.name} spectrogram" loading="lazy" data-caption="${m.name}">
+            </div>`;
+        }
+        grid += `<div class="spec-group">
+            <div class="spec-group-label">${g.label}</div>
+            <div class="spec-row">${items}</div>
+        </div>`;
+    }
+
+    return table + grid;
+}
+
+// Populate all tab contents
+for (const s of SAMPLES) {
+    document.getElementById("tab-" + s).innerHTML = buildTabContent(s);
+}
+
+// Tab switching
+document.querySelector(".tab-bar").addEventListener("click", function(e) {
+    const btn = e.target.closest("[data-sample]");
+    if (!btn) return;
+    // Pause all audio in the currently active tab
+    const activeTab = document.querySelector(".tab-content.active");
+    if (activeTab) {
+        activeTab.querySelectorAll("audio").forEach(a => { a.pause(); a.currentTime = 0; });
+    }
+    // Update tab state
+    this.querySelectorAll("button").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    document.querySelectorAll(".tab-content").forEach(tc => tc.classList.remove("active"));
+    document.getElementById("tab-" + btn.dataset.sample).classList.add("active");
+});
+
+// Lightbox
+(function() {
+    const lb = document.getElementById("lightbox");
+    const lbImg = document.getElementById("lightbox-img");
+    const lbCap = document.getElementById("lightbox-caption");
+
+    function open(src, caption) {
+        lbImg.src = src;
+        lbCap.textContent = caption || "";
+        lb.hidden = false;
+        document.body.style.overflow = "hidden";
+    }
+
+    function close() {
+        lb.hidden = true;
+        lbImg.src = "";
+        document.body.style.overflow = "";
+    }
+
+    // Click on any .zoomable image
+    document.addEventListener("click", function(e) {
+        const img = e.target.closest("img.zoomable");
+        if (img) {
+            open(img.src, img.dataset.caption || img.alt);
+            return;
+        }
+        // Click backdrop or lightbox area to close
+        if (e.target.closest(".lightbox-backdrop") || e.target === lb) {
+            close();
+        }
+    });
+
+    // Click image inside lightbox also closes
+    lbImg.addEventListener("click", close);
+
+    // Escape key closes
+    document.addEventListener("keydown", function(e) {
+        if (e.key === "Escape" && !lb.hidden) close();
+    });
+})();
+</script>
+
+</body>
+</html>
