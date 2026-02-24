@@ -19,8 +19,8 @@ OUT_DIR = os.path.join(DEMO_DIR, "spectrograms")
 
 MODELS = [
     "clean", "noisy",
-    "dublonet_12.5ms", "dublonet_25.0ms",
-    "dublonet_75.0ms", "dublonet_200.0ms",
+    "lacosenet_12.5ms", "lacosenet_25.0ms",
+    "lacosenet_75.0ms", "lacosenet_200.0ms",
     "deepfilternet3", "mpsenet",
 ]
 

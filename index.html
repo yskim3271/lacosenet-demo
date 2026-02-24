@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DuBLoNet: Dual-Buffer Low-Latency Network for Streaming Speech Enhancement</title>
+    <title>LaCo-SENet: Latency-Controlled Speech Enhancement Network for Streaming</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -12,18 +12,17 @@
 
 <!-- ===== Header ===== -->
 <header>
-    <h1>DuBLoNet: Dual-Buffer Low-Latency Network<br>for Streaming Speech Enhancement</h1>
+    <h1>LaCo-SENet: Latency-Controlled Speech Enhancement Network<br>for Streaming</h1>
     <div class="venue">Submitted to Interspeech 2026</div>
     <div class="abstract">
         <strong>Abstract.</strong>
         Streaming speech enhancement requires balancing algorithmic latency against quality, yet existing approaches largely treat this as a binary causal versus non-causal choice.
-        DuBLoNet addresses this with a single architecture through three mechanisms:
-        (1) asymmetric temporal padding redistributes past and future context in convolutions, enabling systematic latency control without increasing model size;
-        (2) dual-buffer streaming combines state buffers for past context with lookahead buffers for future context at input and feature levels; and
-        (3) a context isolation mechanism prevents future-frame leakage into streaming state, ensuring training and inference consistency.
-        On VoiceBank+DEMAND, DuBLoNet (1.37M parameters) covers 12.5 to 75.0 ms algorithmic latency,
-        achieving PESQ from 3.35 at 12.5 ms to 3.43 at 75.0 ms.
-        At just 12.5 ms (fully causal), DuBLoNet achieves PESQ 3.35, surpassing the prior causal state-of-the-art (3.27 at 46.5 ms).
+        LaCo-SENet addresses this with a unified architecture controlled by a single hyperparameter through two mechanisms:
+        (1) asymmetric temporal padding redistributes past and future context in convolutions, enabling systematic latency control without increasing model size; and
+        (2) dual-buffer streaming combines state buffers for past context with lookahead buffers for future context at input and feature levels, with selective state updates that prevent future-frame leakage into streaming state, ensuring training and inference consistency.
+        On VoiceBank+DEMAND, LaCo-SENet (1.37M parameters) covers 12.5 to 75.0 ms algorithmic latency,
+        achieving PESQ ranging from 3.35 at 12.5 ms to 3.43 at 75.0 ms.
+        At just 12.5 ms (fully causal), LaCo-SENet achieves PESQ 3.35, surpassing the prior causal state-of-the-art (3.27 at 46.5 ms).
     </div>
 </header>
 
@@ -31,14 +30,14 @@
 <section id="architecture">
     <h2>Architecture</h2>
     <p>
-        DuBLoNet is a frequency-domain causal speech enhancement model based on the Backbone encoder-decoder architecture.
+        LaCo-SENet is a frequency-domain causal speech enhancement model based on the Backbone encoder-decoder architecture.
         Asymmetric convolution padding ratios control the lookahead at each layer, enabling fine-grained latency configuration
         from a single trained model. At inference time, dual-buffer streaming processes audio frame-by-frame using state buffers
         (past context) and lookahead buffers (future context).
     </p>
     <div class="figure-wrap">
-        <img class="zoomable" src="figures/figure1.png" alt="DuBLoNet architecture diagram" data-caption="Figure 1: DuBLoNet architecture with dual-buffer streaming inference.">
-        <div class="caption">Figure 1: DuBLoNet architecture with dual-buffer streaming inference.</div>
+        <img class="zoomable" src="figures/figure1.png" alt="LaCo-SENet architecture diagram" data-caption="Figure 1: LaCo-SENet architecture with dual-buffer streaming inference.">
+        <div class="caption">Figure 1: LaCo-SENet architecture with dual-buffer streaming inference.</div>
     </div>
 </section>
 
@@ -47,7 +46,7 @@
     <h2>Audio Samples</h2>
     <p>
         Audio samples from the VoiceBank+DEMAND test set. PESQ values shown are <strong>test-set averages</strong> from the paper (not per-sample scores).
-        DuBLoNet models use a single 1.37M-parameter architecture at different latency configurations.
+        LaCo-SENet models use a single 1.37M-parameter architecture at different latency configurations.
     </p>
 
     <!-- Tab bar -->
@@ -69,8 +68,8 @@
 <section id="results">
     <h2>Results</h2>
     <div class="figure-wrap">
-        <img class="zoomable" src="figures/latency_vs_pesq.png" alt="Latency vs PESQ plot" style="max-width:600px;" data-caption="Figure 2: PESQ vs. algorithmic latency for DuBLoNet and comparison models on VoiceBank+DEMAND.">
-        <div class="caption">Figure 2: PESQ vs. algorithmic latency for DuBLoNet and comparison models on VoiceBank+DEMAND.</div>
+        <img class="zoomable" src="figures/latency_vs_pesq.png" alt="Latency vs PESQ plot" style="max-width:600px;" data-caption="Figure 2: PESQ vs. algorithmic latency for LaCo-SENet and comparison models on VoiceBank+DEMAND.">
+        <div class="caption">Figure 2: PESQ vs. algorithmic latency for LaCo-SENet and comparison models on VoiceBank+DEMAND.</div>
     </div>
 
     <h3>Table: Comparison on VoiceBank+DEMAND</h3>
@@ -112,7 +111,7 @@
                 <td>3.26</td><td>.950</td><td>4.57</td><td class="best">3.79</td><td>4.00</td>
             </tr>
             <tr>
-                <td>DFNet3</td>
+                <td>DeepFilterNet3</td>
                 <td>2023</td><td>40</td><td>2.13M</td>
                 <td>3.17</td><td>.944</td><td>4.34</td><td>3.61</td><td>3.77</td>
             </tr>
@@ -122,27 +121,27 @@
                 <td>3.27</td><td>&mdash;</td><td>4.57</td><td>2.85</td><td>3.96</td>
             </tr>
             <tr class="group-separator ours">
-                <td>DuBLoNet (12.5 ms)</td>
+                <td>LaCo-SENet (12.5 ms)</td>
                 <td rowspan="5">&mdash;</td><td>12.5</td><td rowspan="5">1.37M</td>
                 <td>3.35&plusmn;.02</td><td>.952&plusmn;.000</td><td>4.61&plusmn;.01</td><td>3.71&plusmn;.01</td><td>4.05&plusmn;.02</td>
             </tr>
             <tr class="ours">
-                <td>DuBLoNet (25.0 ms)</td>
+                <td>LaCo-SENet (25.0 ms)</td>
                 <td>25.0</td>
                 <td>3.36&plusmn;.01</td><td>.953&plusmn;.000</td><td>4.62&plusmn;.01</td><td>3.72&plusmn;.02</td><td>4.07&plusmn;.01</td>
             </tr>
             <tr class="ours">
-                <td>DuBLoNet (50.0 ms)</td>
+                <td>LaCo-SENet (50.0 ms)</td>
                 <td>50.0</td>
                 <td>3.40&plusmn;.02</td><td>.953&plusmn;.001</td><td>4.63&plusmn;.02</td><td>3.72&plusmn;.01</td><td>4.09&plusmn;.02</td>
             </tr>
             <tr class="ours">
-                <td>DuBLoNet (75.0 ms)</td>
+                <td>LaCo-SENet (75.0 ms)</td>
                 <td>75.0</td>
                 <td class="best">3.43&plusmn;.01</td><td class="best">.954&plusmn;.001</td><td class="best">4.66&plusmn;.02</td><td>3.78&plusmn;.00</td><td class="best">4.12&plusmn;.02</td>
             </tr>
             <tr class="ours">
-                <td>DuBLoNet&Dagger; (200 ms)</td>
+                <td>LaCo-SENet&Dagger; (200 ms)</td>
                 <td>200.0</td>
                 <td>3.47&plusmn;.02</td><td>.957&plusmn;.001</td><td>4.69&plusmn;.01</td><td>3.79&plusmn;.03</td><td>4.17&plusmn;.02</td>
             </tr>
@@ -162,14 +161,14 @@
 <!-- ===== Footer ===== -->
 <footer>
     <h3>Citation</h3>
-    <div class="bibtex">@inproceedings{dublonet2026,
-  title     = {DuBLoNet: Dual-Buffer Low-Latency Network for Streaming Speech Enhancement},
+    <div class="bibtex">@inproceedings{lacosenet2026,
+  title     = {LaCo-SENet: Latency-Controlled Speech Enhancement Network for Streaming},
   author    = {Anonymous},
   booktitle = {Proc. Interspeech 2026},
   year      = {2026}
 }</div>
     <p style="margin-top:16px;">
-        <a href="https://github.com/">Code &amp; Model (coming soon)</a>
+        <a href="https://github.com/yskim3271/LaCo-SENet">Code &amp; Model (coming soon)</a>
     </p>
 </footer>
 
@@ -190,11 +189,11 @@ const MODELS = [
     // group: "reference" | "ours" | "baseline"
     { name: "Clean",       dir: "clean",             latency: "&mdash;", pesq: "&mdash;", group: "reference" },
     { name: "Noisy",       dir: "noisy",             latency: "&mdash;", pesq: "1.97",    group: "reference" },
-    { name: "DuBLoNet 12.5 ms", dir: "dublonet_12.5ms",  latency: "12.5",  pesq: "3.35", group: "ours" },
-    { name: "DuBLoNet 25.0 ms", dir: "dublonet_25.0ms",  latency: "25.0",  pesq: "3.36", group: "ours" },
-    { name: "DuBLoNet 50.0 ms", dir: "dublonet_50.0ms",  latency: "50.0",  pesq: "3.40", group: "ours" },
-    { name: "DuBLoNet 75.0 ms", dir: "dublonet_75.0ms",  latency: "75.0",  pesq: "3.43", group: "ours" },
-    { name: "DuBLoNet 200 ms",  dir: "dublonet_200.0ms", latency: "200.0", pesq: "3.47", group: "ours" },
+    { name: "LaCo-SENet 12.5 ms", dir: "lacosenet_12.5ms",  latency: "12.5",  pesq: "3.35", group: "ours" },
+    { name: "LaCo-SENet 25.0 ms", dir: "lacosenet_25.0ms",  latency: "25.0",  pesq: "3.36", group: "ours" },
+    { name: "LaCo-SENet 50.0 ms", dir: "lacosenet_50.0ms",  latency: "50.0",  pesq: "3.40", group: "ours" },
+    { name: "LaCo-SENet 75.0 ms", dir: "lacosenet_75.0ms",  latency: "75.0",  pesq: "3.43", group: "ours" },
+    { name: "LaCo-SENet 200 ms",  dir: "lacosenet_200.0ms", latency: "200.0", pesq: "3.47", group: "ours" },
     { name: "DeepFilterNet3",   dir: "deepfilternet3",   latency: "40",    pesq: "3.17", group: "baseline" },
     { name: "MP-SENet",         dir: "mpsenet",          latency: "&mdash;", pesq: "3.50", group: "baseline" },
 ];
@@ -220,11 +219,11 @@ function buildTabContent(sample) {
     const table = `<table class="audio-table">${rows}</table>`;
 
     // Spectrogram grid — grouped by category, 2-col layout
-    // Exclude DuBLoNet 50.0ms from spectrograms for cleaner 2-per-row layout
-    const specSkip = new Set(["dublonet_50.0ms"]);
+    // Exclude LaCo-SENet 50.0ms from spectrograms for cleaner 2-per-row layout
+    const specSkip = new Set(["lacosenet_50.0ms"]);
     const groups = [
         { label: "Reference",      models: MODELS.filter(m => m.group === "reference") },
-        { label: "DuBLoNet (Ours)", models: MODELS.filter(m => m.group === "ours" && !specSkip.has(m.dir)) },
+        { label: "LaCo-SENet (Ours)", models: MODELS.filter(m => m.group === "ours" && !specSkip.has(m.dir)) },
         { label: "Baselines",      models: MODELS.filter(m => m.group === "baseline") },
     ];
 
